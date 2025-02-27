@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data Filter</title>
+</head>
+<body>
+    <h1>Excel Data Filter</h1>
+    <input type="file" id="excel-file" accept=".xlsx, .xls" />
+    <button onclick="loadExcel()">Load Excel</button>
+    <div id="filter-controls" style="display:none;">
+        <input type="text" id="filter-input" placeholder="Filter by name..." />
+        <button onclick="filterData()">Filter</button>
+    </div>
+    <table id="data-table" border="1">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>City</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be populated here -->
+        </tbody>
+    </table>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script>
+        let data = [];
+
+        function loadExcel() {
+            const fileInput = document.getElementById('excel-file');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    data = json;
+                    displayData(json);
+                    document.getElementById('filter-controls').style.display = 'block';
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function displayData(data) {
+            const tbody = document.querySelector('#data-table tbody');
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.Name}</td>
+                    <td>${row.Age}</td>
+                    <td>${row.City}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterData() {
+            const filterValue = document.getElementById('filter-input').value.toLowerCase();
+            const filteredData = data.filter(row => row.Name.toLowerCase().includes(filterValue));
+            displayData(filteredData);
+        }
+    </script>
+</body>
+</html>
